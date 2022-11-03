@@ -36,7 +36,7 @@ def get_content_from_html(html_text) -> list:
         laptops.append(
             {
                 "title": item.find("div", class_="listbox_title oh").get_text().replace("\n", ""),
-                "description": item.find("div", class_="product_text pull-left").get_text().replace("\n", ""),
+                "description": item.find("div", class_="product_text pull-left").get_text().replace("\n", "").replace("       ", "").replace("    ", ""),
                 "price": item.find("div", class_="listbox_price text-center").get_text().replace("\n", ""),
                 "price_usd": str(float(item.find("div", class_="listbox_price text-center").get_text().replace("\n", "").replace(" сом", "")) / nbkr_usd_float) + " USD",
                 "image": LINK + item.find("img").get("src")
