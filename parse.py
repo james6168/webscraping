@@ -1,11 +1,13 @@
 import requests
 from bs4 import BeautifulSoup
+import csv
 
 URL = "https://www.kivano.kg/noutbuki?brands=acer-apple"
 HEADERS = {
     "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36",
     "accept": "*/*"
 }
+CSV_FILE = "laptop.csv"
 
 
 def get_html(url, header):
@@ -23,7 +25,7 @@ def get_nbkr_usd_to_kgs_rate():
     return usd_to_kgs_rate
 
 
-def get_content_from_html(html_text):
+def get_content_from_html(html_text) -> list:
     soup = BeautifulSoup(html_text, "html.parser")
     items = soup.find_all("div", class_="item product_listbox oh")
     laptops = []
@@ -40,16 +42,26 @@ def get_content_from_html(html_text):
                 "image": LINK + item.find("img").get("src")
             }
         )
-    print(laptops)
+    return laptops
+
+
+def save_data(laptops: list) -> None:
+    with open(CSV_FILE, "w") as file:
+        writer = csv.writer(file, delimiter=',')
+        writer.writerow(["Название", "Описание", "Цена", "Цена в долларах", "Картинка"])
+        for laptop in laptops:
+            writer.writerow([laptop["title"], laptop["description"], laptop["price"], laptop["price_usd"], laptop["image"]])
 
 
 def get_result_parse():
     html = get_html(url=URL, header=HEADERS)
     if html.status_code == 200:
-        get_content_from_html(html.text)
+        laptops = get_content_from_html(html.text)
+        save_data(laptops)
+    return laptops
 
 
-get_result_parse()
+print(get_result_parse())
 
 
 # print(get_nbkr_usd_to_kgs_rate())
