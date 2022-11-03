@@ -1,3 +1,5 @@
+import csv
+
 import requests
 from bs4 import BeautifulSoup
 
@@ -6,6 +8,7 @@ HEADERS = {
     "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36",
     "accept": "*/*"
 }
+CSV_FILE = "cars.csv"
 
 
 # Returns a html text of cars of cars.kg
@@ -29,7 +32,7 @@ def get_content_from_html(html_converted_to_text):
             cars_objects_list.append(
                 {
                     "car_model": each_car_object.find("span", class_="catalog-item-caption").get_text().replace("\n", "").strip(),
-                    "car_description": each_car_object.find("span", class_="catalog-item-descr").get_text().replace("\n", "").strip(),
+                    "car_description": each_car_object.find("span", class_="catalog-item-descr").get_text().replace("\n", "").strip().replace("                                        ", ""),
                     "car_year": each_car_object.find("span", class_="caption-year").get_text().replace("\n", "").strip(),
                     "car_price": each_car_object.find("span", class_="catalog-item-price").get_text().replace("\n", "").strip(),
                     "car_date_and_address": each_car_object.find("span", class_="catalog-item-info").get_text().replace("\n", "").strip(),
@@ -40,23 +43,41 @@ def get_content_from_html(html_converted_to_text):
             cars_objects_list.append(
                 {
                     "car_model": each_car_object.find("span", class_="catalog-item-caption").get_text().replace("\n", "").strip(),
-                    "car_description": each_car_object.find("span", class_="catalog-item-descr").get_text().replace("\n", "").strip(),
+                    "car_description": each_car_object.find("span", class_="catalog-item-descr").get_text().replace("\n", "")
+                    .strip()
+                    .replace("                                       ", "")
+                    .replace("           ", ""),
                     "car_year": each_car_object.find("span", class_="caption-year").get_text().replace("\n", "").strip(),
                     "car_price": each_car_object.find("span", class_="catalog-item-price").get_text().replace("\n", "").strip(),
                     "car_date_and_address": each_car_object.find("span", class_="catalog-item-info").get_text().replace("\n", "").strip(),
                     "car_mileage": each_car_object.find("span", class_="catalog-item-mileage").get_text().replace("\n", "").strip()
                 }
             )
+    return cars_objects_list
 
-    print(cars_objects_list)
-
+def save_data_to_csv(cars_objects_list: list) -> None:
+    with open(CSV_FILE, "w") as cars_csv_file:
+        csv_writer = csv.writer(cars_csv_file, delimiter=',')
+        csv_writer.writerow(["Модель", "Описание", "Год авто", "Цена", "Дата и адресс", "Пробег"])
+        for each_car in cars_objects_list:
+            csv_writer.writerow(
+                [each_car["car_model"],
+                 each_car["car_description"],
+                 each_car["car_year"],
+                 each_car["car_price"],
+                 each_car["car_date_and_address"],
+                 each_car["car_mileage"]
+                 ]
+            )
 
 def parse_cars_kg():
     html = get_cars_list_html(some_url=URL, some_headers=HEADERS)
     if html.status_code == 200:
-        get_content_from_html(html.text)
+        cars = get_content_from_html(html.text)
+        save_data_to_csv(cars)
+    return cars
 
 
-parse_cars_kg()
+print(parse_cars_kg())
 
 
